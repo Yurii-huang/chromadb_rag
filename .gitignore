@@ -1,0 +1,7 @@
+HuggingFaceEmbeddings/*
+vectorstore/*
+.vscode/*
+.venv/*
+__pycache__/*
+*.pyc
+*.pyo
