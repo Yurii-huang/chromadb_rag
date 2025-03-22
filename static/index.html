@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChromaDB Query</title>
+    <!-- 嵌入 CSS 代码 -->
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            background-color: #f4f4f4;
+        }
+
+       .chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100%;
+            max-width: none;
+            background-color: #fff;
+            border-radius: 0; 
+            box-shadow: none; 
+        }
+
+       .chat-messages {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch; 
+        }
+
+       .chat-message {
+            margin: 5px;
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            max-width: 80%;
+            word-wrap: break-word; 
+        }
+
+       .user {
+            background-color: #e0f7fa;
+            justify-content: flex-end;
+            margin-left: auto;
+        }
+
+       .bot {
+            background-color: #f1f8e9;
+            justify-content: flex-start;
+        }
+
+       .avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin: 0 10px;
+        }
+
+       .avatar .bot {
+            order: 2;
+        }
+        
+        .user .avatar {
+            order: 2;
+        }
+
+       .chat-input {
+            display: flex;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+
+       .chat-input input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+
+       .chat-input button {
+            padding: 8px 16px;
+            background-color: #2196f3;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+       .chat-input button:hover {
+            background-color: #1976d2;
+        }
+
+        /* 响应式布局 */
+        @media (max-width: 768px) {
+           .chat-message {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="chat-container">
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input">
+            <input type="text" id="question" placeholder="输入查询问题">
+            <button type="button" id="send-button">发送</button>
+        </div>
+    </div>
+    <!-- 嵌入 JavaScript 代码 -->
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+        const questionInput = document.getElementById('question');
+        const sendButton = document.getElementById('send-button');
+
+        // 页面加载完成后检查并调整高度
+        window.addEventListener('load', function () {
+            // 原有代码逻辑
+        });
+
+        // 发送消息函数
+        const sendMessage = async () => {
+            const question = questionInput.value.trim();
+            if (question) {
+                // 显示用户的问题
+                const userMessage = document.createElement('div');
+                userMessage.classList.add('chat-message', 'user');
+
+                const userAvatar = document.createElement('img');
+                userAvatar.src = 'https://cdn-icons-png.flaticon.com/512/149/149071.png'; 
+                userAvatar.classList.add('avatar');
+                userMessage.appendChild(userAvatar);
+
+                const userText = document.createElement('span');
+                userText.textContent = question;
+                userMessage.appendChild(userText);
+
+                chatMessages.appendChild(userMessage);
+                questionInput.value = '';
+
+                try {
+                    const formData = new FormData();
+                    formData.append('question', question);
+                    const response = await fetch('/', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        // 显示 ChromaDB 的回答
+                        const botMessage = document.createElement('div');
+                        botMessage.classList.add('chat-message', 'bot');
+
+                        const botAvatar = document.createElement('img');
+                        botAvatar.src = 'https://cdn-icons-png.flaticon.com/512/2089/2089011.png'; 
+                        botAvatar.classList.add('avatar');
+                        botMessage.appendChild(botAvatar);
+
+                        const botText = document.createElement('span');
+                        const formattedResult = data.result.replace(/\n/g, '<br>');
+                        botText.innerHTML = formattedResult;
+                        botMessage.appendChild(botText);
+
+                        chatMessages.appendChild(botMessage);
+                    } else {
+                        // 显示服务器返回的错误信息
+                        const errorMessage = document.createElement('div');
+                        errorMessage.classList.add('chat-message', 'bot');
+
+                        const errorAvatar = document.createElement('img');
+                        errorAvatar.src = 'https://cdn-icons-png.flaticon.com/512/2089/2089011.png'; 
+                        errorAvatar.classList.add('avatar');
+                        errorMessage.appendChild(errorAvatar);
+
+                        const errorText = document.createElement('span');
+                        errorText.textContent = `错误: ${data.error}`;
+                        errorMessage.appendChild(errorText);
+
+                        chatMessages.appendChild(errorMessage);
+                    }
+                    // 滚动到聊天框底部
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                } catch (error) {
+                    // 显示网络错误信息
+                    const errorMessage = document.createElement('div');
+                    errorMessage.classList.add('chat-message', 'bot');
+
+                    const errorAvatar = document.createElement('img');
+                    errorAvatar.src = 'https://cdn-icons-png.flaticon.com/512/2089/2089011.png'; 
+                    errorAvatar.classList.add('avatar');
+                    errorMessage.appendChild(errorAvatar);
+
+                    const errorText = document.createElement('span');
+                    errorText.textContent = `发生错误: ${error.message}`;
+                    errorMessage.appendChild(errorText);
+
+                    chatMessages.appendChild(errorMessage);
+                    // 滚动到聊天框底部
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            }
+        };
+
+        // 监听发送按钮点击事件
+        sendButton.addEventListener('click', sendMessage);
+
+        // 监听输入框回车键事件
+        questionInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+
+</html>
